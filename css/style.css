@@ -1,3 +1,20 @@
+body {
+    font-family: 'Alegreya Sans SC'; font-size: 20px;
+}
+
+.title {
+    font-weight: bold; 
+    font-size: 24px;
+}
+
+.step {
+    margin-bottom: 400px;
+}
+
+#graphic {
+    margin-top:60px;
+}
+
 #sections {
     position: relative;
     display: inline-block;
@@ -6,8 +23,12 @@
     z-index: 90;
 }
 
-.step {
-    margin-bottom: 200px;
+#container {
+    width: 1000px;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 #vis {
@@ -16,7 +37,7 @@
     top: 60px;
     z-index: 1;
     margin-left: 0;
-    height: 600px;
-    width: 600px;
+    height: 700px;
+    width: 700px;
     background-color: #ddd;
 }
