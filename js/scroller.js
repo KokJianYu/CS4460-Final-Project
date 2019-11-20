@@ -1,4 +1,4 @@
-
+// This code is heavily referenced from https://vallandingham.me/scroller.html
 
 function scroller() {
     var container = d3.select('container')
