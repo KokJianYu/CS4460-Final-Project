@@ -1,10 +1,24 @@
 body {
-    font-family: 'Alegreya Sans SC'; font-size: 20px;
+    font-family: 'Alegreya Sans SC';
+    font-size: 20px;
+    margin: 0;
+    padding: 0;
 }
 
-.title {
+#sections .title {
     font-weight: bold; 
     font-size: 24px;
+}
+
+#vis .title {
+    font-weight: bold; 
+    font-size: 44px;
+    text-anchor: middle;
+}
+
+#vis .subtitle {
+    font-size: 40px;
+    text-anchor: middle;
 }
 
 .step {
@@ -45,4 +59,8 @@ body {
 #table {
     margin-left: auto;
     margin-right: auto;
+}
+
+#extra_space {
+    height:400px;
 }

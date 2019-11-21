@@ -14,6 +14,13 @@ From the [National Transportation Safety Board](https://www.ntsb.gov/_layouts/nt
 ## Visualization Type
 ScrollyTelling
 
+## How to run
+1. Navigate to root directory
+2. Execute code `python -m http.server 8000`
+3. Go to localhost:8000 in Google Chrome
+    * This webpage might not work as expected on browsers other than Google Chrome.
+
+
 # Group Members
 - Kok Jian Yu
 - Allana Hudson

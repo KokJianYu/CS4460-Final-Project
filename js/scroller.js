@@ -19,18 +19,6 @@ function scroller() {
         // manually call resize and position to setup scroller
         resize();
         position();
-
-        // // hack to get position
-        // // to be called once for
-        // // the scroll position on
-        // // load.
-        // // @v4 timer no longer stops if you
-        // // return true at the end of the callback
-        // // function - so here we stop it explicitly.
-        // var timer = d3.timer(function () {
-        // position();
-        // timer.stop();
-        // });x
         
     }
 
