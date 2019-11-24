@@ -305,7 +305,7 @@ function drawHeatMapTypeOfInjuries(){
         .attr("width", 300)
         .attr("height", 10)
         .attr("x", -150)
-        .attr("y", 20)
+        .attr("y", 10)
         .style("fill", "url(#linear-gradient)");
         
         //Define x-axis
@@ -316,7 +316,158 @@ function drawHeatMapTypeOfInjuries(){
         //Set up X axis
         legendWrapper.append("g")
         .attr("class", "heatmap")
-        .attr("transform", "translate("+ (-150) +"," + (30) + ")")
+        .attr("transform", "translate("+ (-150) +"," + (20) + ")")
+        .call(d3.axisBottom(xAxis));
+    });
+        
+}
+
+function drawHeatMapTypeOfInjuriesAxisInverted(){
+    d3.csv(AIRCRAFT_DATA_PATH, function(data){
+
+        // Aggregate Total_Fatal_Injuries from incidents with the same year.
+        var injuriesByYear = d3.nest()
+        .key(function (d) { 
+            year = d.Event_Date.split("/")[2]; 
+            if (year.length == 2) {
+                if (parseInt(year) > 50) {
+                    year = "19"+year
+                } else {
+                    year = "20"+year
+                }
+            }
+            return year
+        })
+        .rollup(function (v) {
+            total_fatal_injuries = d3.sum(v, function (d) { return d.Total_Fatal_Injuries });
+            total_serious_injuries = d3.sum(v, function (d) { return d.Total_Serious_Injuries });
+            total_uninjured = d3.sum(v, function (d) { return d.Total_Uninjured });
+            return_dict = {
+                "Total_Fatal_Injuries":total_fatal_injuries,
+                "Total_Serious_Injuries":total_serious_injuries,
+                "Total_Uninjured":total_uninjured,
+            }
+            return return_dict
+        })
+        .entries(data);
+
+        // Collect the keys to be used to create x axis
+        keys = []
+        injuriesByYear.forEach(element => {
+            keys.push(element.key)
+        })
+        keys.sort()
+
+        // Set height and width to be 90% of SVG. 
+        // Chart WILL get hidden if height and width above 700px
+        // Can be fixed by adjusting SVG size. 
+        height = STAGE_HEIGHT * 0.9 - 100
+        width = STAGE_WIDTH * 0.9 - 200
+        
+        // chartOffset is used to move the chart from its creation point. (moves both x and y position by offset)
+        // purpose is to prevent axis from getting hidden due to being outside SVG bounding box.
+        var chartOffset = [150, 50]
+        // xRegionOffset move the xAxis in the +x direction by offset.
+        // set this to a value > 0 if you do not want origin of chart to be at the intersection of axis.
+        var xRegionOffset = 0
+
+        // Technically, the max value of yScale should be retrieved from the dataset. 
+        // But I hard coded it here as this is only for demonstration purpose
+        var xScale = d3.scaleBand()
+        .domain(["Total_Fatal_Injuries", "Total_Serious_Injuries", "Total_Uninjured"])
+        .range([0, width])
+        .padding(0.1);
+        var yScale = d3.scaleBand()
+        .domain(keys)
+        .range([height, 0])
+        .padding(0.1);  
+
+        var myColor = d3.scaleLinear()
+        .range(["#a2fafa", "#0c00ad"])
+        .domain([1,8000])
+
+
+        var chart = createChartWithAxis(xScale, yScale, width, height, chartOffset, xRegionOffset)  
+        // Create chart title
+        chart.append('text')
+        .attr('class', 'title')
+        .attr('x', width / 2 + chartOffset[0] + xRegionOffset)
+        .attr('y', 30)
+        .text('Types of Injuries per year');
+
+        chart.selectAll()
+        .data(injuriesByYear)
+        .enter()
+        .append("rect")
+        .attr("y", function (d) { return xRegionOffset + chartOffset[1] + yScale(d.key)})
+        .attr("x", function(d) { return xScale("Total_Fatal_Injuries") + chartOffset[0] })
+        .attr("width", xScale.bandwidth() )
+        .attr("height", yScale.bandwidth() )
+        .style("fill", function(d) { return myColor(d.value["Total_Fatal_Injuries"])} );
+        chart.selectAll()
+        .data(injuriesByYear)
+        .enter()
+        .append("rect")
+        .attr("y", function (d) { return xRegionOffset + chartOffset[1] + yScale(d.key)})
+        .attr("x", function(d) { return xScale("Total_Serious_Injuries") + chartOffset[0] })
+        .attr("width", xScale.bandwidth() )
+        .attr("height", yScale.bandwidth() )
+        .style("fill", function(d) { return myColor(d.value["Total_Serious_Injuries"])} );
+        chart.selectAll()
+        .data(injuriesByYear)
+        .enter()
+        .append("rect")
+        .attr("y", function (d) { return xRegionOffset + chartOffset[1] + yScale(d.key)})
+        .attr("x", function(d) { return xScale("Total_Uninjured") + chartOffset[0]})
+        .attr("width", xScale.bandwidth() )
+        .attr("height", yScale.bandwidth() )
+        .style("fill", function(d) { return myColor(d.value["Total_Uninjured"])} )
+
+        var defs = svg.append("defs");
+        var linearGradient = defs.append("linearGradient")
+        .attr("id", "linear-gradient");
+        linearGradient
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "0%");
+        //Set the color for the start (0%)
+        linearGradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", "#a2fafa"); //light blue
+
+        //Set the color for the end (100%)
+        linearGradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "#0c00ad"); //dark blue
+
+        
+        var legendWrapper = svg.append("g")
+            .attr("id", "legend_wrapper")
+            .attr('transform', `translate(${width/2 + chartOffset[0]}, ${height + chartOffset[1] + 60})`)
+            // .attr("x", width/2 + chartOffset[0] - 150)
+            // .attr("y", height + chartOffset[1] + 60)
+        
+        legendWrapper.append("text")
+        .style("text-anchor", "middle")
+        .text("Number of Occurrence")
+
+        legendWrapper.append("rect")
+        .attr("width", 300)
+        .attr("height", 10)
+        .attr("x", -150)
+        .attr("y", 10)
+        .style("fill", "url(#linear-gradient)");
+        
+        //Define x-axis
+        var xAxis = d3.scaleLinear()
+        .domain([0, 8000])
+        .range([0, 300]);
+        
+        //Set up X axis
+        legendWrapper.append("g")
+        .attr("class", "heatmap")
+        .attr("transform", "translate("+ (-150) +"," + (20) + ")")
         .call(d3.axisBottom(xAxis));
     });
         
@@ -331,6 +482,7 @@ function initializeStepsPlotsArray() {
         showTitle, 
         exampleDrawChart,
         drawHeatMapTypeOfInjuries,
+        drawHeatMapTypeOfInjuriesAxisInverted,
         exampleDrawOnlyYaxis,
         exampleDrawOnlyXaxis
     ]
