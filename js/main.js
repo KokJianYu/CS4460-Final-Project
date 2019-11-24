@@ -515,7 +515,7 @@ function drawGraph3() {
         var chartOffset = [150, 50]
         // xRegionOffset move the xAxis in the +x direction by offset.
         // set this to a value > 0 if you do not want origin of chart to be at the intersection of axis.
-        var xRegionOffset = 0
+        var xRegionOffset = 10
 
         var chart = createChartWithAxis(xScale, yScale, width, height, chartOffset, xRegionOffset)  
         // Create chart title
@@ -531,7 +531,7 @@ function drawGraph3() {
         .enter()
         .append("rect")
         .attr("y", function (d) { return chartOffset[1] + yScale(d.key) - 5 })
-        .attr("x", xScale(0) + chartOffset[0])
+        .attr("x", xScale(0) + chartOffset[0] + xRegionOffset)
 		.attr("height", 10)
         .style("fill", "green")
         .transition()
@@ -610,7 +610,7 @@ function drawGraph3Breakdown() {
             var chartOffset = [150, 100 + (height+75)*i]
             // xRegionOffset move the xAxis in the +x direction by offset.
             // set this to a value > 0 if you do not want origin of chart to be at the intersection of axis.
-            var xRegionOffset = 0
+            var xRegionOffset = 10
 
             var chart = createChartWithAxis(xScale, yScale, width, height, chartOffset, xRegionOffset)  
             // Create chart title
@@ -626,7 +626,7 @@ function drawGraph3Breakdown() {
             .enter()
             .append("rect")
             .attr("y", function (d) { return chartOffset[1] + yScale(d.key) - 5 })
-            .attr("x", xScale(0) + chartOffset[0])
+            .attr("x", xScale(0) + chartOffset[0] + xRegionOffset)
             .attr("height", 10)
             .style("fill", colorScale(i))
             .transition()
