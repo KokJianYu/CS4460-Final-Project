@@ -47,11 +47,10 @@ function showTitle() {
  */
 function createChartWithAxis(xScale, yScale, width, height, chartOffset=50, xRegionOffset=0) {
     
-    var offset = 50
     var chart = svg.append('g')
-        .attr("width", width-offset)
-        .attr("height", height-offset)
-        .attr("class", "table")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("class", "chart")
     if (yScale != null){
         chart.append('g').attr('transform', `translate(${chartOffset}, ${chartOffset})`).call(d3.axisLeft(yScale))
     }
