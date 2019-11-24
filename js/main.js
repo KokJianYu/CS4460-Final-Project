@@ -469,8 +469,257 @@ function drawHeatMapTypeOfInjuriesAxisInverted(){
         .attr("class", "heatmap")
         .attr("transform", "translate("+ (-150) +"," + (20) + ")")
         .call(d3.axisBottom(xAxis));
-    });
+    }); 
+}
+
+function drawGraph3() {
+    d3.csv(AIRCRAFT_DATA_PATH, function(data){
+
+        // Aggregate Total_Fatal_Injuries from incidents with the same year.
+        var incidentsByMakeAndModel = d3.nest()
+		.key(function (d) { 
+            k = d.Make + " " +d.Model
+            return k
+        })
+		.rollup(function (v) {
+			return d3.sum(v, function (d) {
+				return 1
+			}
+			);
+		})
+        .entries(data);
+
+        // Collect the keys to be used to create x axis
+        keys = []
+        incidentsByMakeAndModel = incidentsByMakeAndModel.sort(function(a,b) { return +a.value - +b.value })
+        incidentsByMakeAndModel.forEach(element => {
+            keys.push(element.key)
+        })
+
+        // Set height and width to be 90% of SVG. 
+        // Chart WILL get hidden if height and width above 700px
+        // Can be fixed by adjusting SVG size. 
+        height = STAGE_HEIGHT * 0.9
+        width = STAGE_WIDTH * 0.8
         
+        // Technically, the max value of yScale should be retrieved from the dataset. 
+        // But I hard coded it here as this is only for demonstration purpose
+        var xScale = d3.scaleLinear()
+        .domain([0, 650])
+        .range([0, width]);
+        var yScale = d3.scaleOrdinal()
+        .domain(keys)
+        .range(d3.range(0, height, height / keys.length));
+        // chartOffset is used to move the chart from its creation point. (moves both x and y position by offset)
+        // purpose is to prevent axis from getting hidden due to being outside SVG bounding box.
+        var chartOffset = [150, 50]
+        // xRegionOffset move the xAxis in the +x direction by offset.
+        // set this to a value > 0 if you do not want origin of chart to be at the intersection of axis.
+        var xRegionOffset = 0
+
+        var chart = createChartWithAxis(xScale, yScale, width, height, chartOffset, xRegionOffset)  
+        // Create chart title
+        chart.append('text')
+        .attr('class', 'title')
+        .attr('x', width / 2 + chartOffset[0] + xRegionOffset)
+        .attr('y', 30)
+        .text('Number of Incidents');
+
+        // Create bars for the chart
+        chart.selectAll('rect')
+		.data(incidentsByMakeAndModel)
+        .enter()
+        .append("rect")
+        .attr("y", function (d) { return chartOffset[1] + yScale(d.key) - 5 })
+        .attr("x", xScale(0) + chartOffset[0])
+		.attr("height", 10)
+        .style("fill", "green")
+        .transition()
+        .duration(800)
+        .delay(100)
+        .attr("width", function (d) {
+            return xScale(d.value) - xScale(0)
+		})
+    })
+
+}
+
+function drawGraph3Breakdown() {
+    d3.csv(AIRCRAFT_DATA_PATH, function(data){
+
+        // Aggregate Total_Fatal_Injuries from incidents with the same year.
+        var incidentsByMakeAndModel = d3.nest()
+        .key(function(d) {
+            return d.Injury_Severity.split("(")[0]
+        })
+		.key(function (d) { 
+            k = d.Make + " " +d.Model
+            return k
+        })
+		.rollup(function (v) {
+			return d3.sum(v, function (d) {
+				return 1
+			}
+			);
+		})
+        // Collect the keys to be used to create x axis
+        .entries(data);
+        
+        // Set height and width to be 90% of SVG. 
+        // Chart WILL get hidden if height and width above 700px
+        // Can be fixed by adjusting SVG size. 
+        height = STAGE_HEIGHT * 0.2
+        width = STAGE_WIDTH * 0.8
+
+        svg.append('text')
+            .attr('class', 'title')
+            .attr('x', width / 2 + 150 + 0)
+            .attr('y', 30)
+            .text('Number of Incidents');
+
+        headers = ["Fatal", "Non-Fatal", "Incidents"]
+
+        var colorScale = d3.scaleOrdinal()
+        .range(["red","orange", "green"])
+        .domain([0,1,2])
+
+        for(i = 0; i < 3; i++)
+        {
+            console.log(i)
+            keys = []
+            processed_data = incidentsByMakeAndModel[i].values
+            console.log(incidentsByMakeAndModel)  
+            processed_data = processed_data.sort(function(a,b) { return +a.value - +b.value })
+            processed_data = processed_data.slice(processed_data.length-10, processed_data.length)
+            processed_data.forEach(element => {
+                keys.push(element.key)
+            })
+        
+            
+            
+            // Technically, the max value of yScale should be retrieved from the dataset. 
+            // But I hard coded it here as this is only for demonstration purpose
+            var xScale = d3.scaleLinear()
+            .domain([0, 650])
+            .range([0, width]);
+            var yScale = d3.scaleOrdinal()
+            .domain(keys)
+            .range(d3.range(0, height, height / keys.length));
+            // chartOffset is used to move the chart from its creation point. (moves both x and y position by offset)
+            // purpose is to prevent axis from getting hidden due to being outside SVG bounding box.
+            var chartOffset = [150, 100 + (height+75)*i]
+            // xRegionOffset move the xAxis in the +x direction by offset.
+            // set this to a value > 0 if you do not want origin of chart to be at the intersection of axis.
+            var xRegionOffset = 0
+
+            var chart = createChartWithAxis(xScale, yScale, width, height, chartOffset, xRegionOffset)  
+            // Create chart title
+            chart.append('text')
+            .attr('class', 'small_header')
+            .attr('x', width / 2 + chartOffset[0] + xRegionOffset)
+            .attr('y', chartOffset[1])
+            .text(headers[i]);
+
+            // Create bars for the chart
+            chart.selectAll('rect')
+            .data(processed_data)
+            .enter()
+            .append("rect")
+            .attr("y", function (d) { return chartOffset[1] + yScale(d.key) - 5 })
+            .attr("x", xScale(0) + chartOffset[0])
+            .attr("height", 10)
+            .style("fill", colorScale(i))
+            .transition()
+            .duration(800)
+            .delay(100)
+            .attr("width", function (d) {
+                return xScale(d.value) - xScale(0)
+            })
+            console.log(processed_data)
+        }
+
+    })
+}
+
+function drawGraph4() {
+    d3.csv(AIRCRAFT_DATA_PATH, function(data){
+
+        // Aggregate Total_Fatal_Injuries from incidents with the same year.
+        var incidentsByYear = d3.nest()
+		.key(function (d) { 
+            year = d.Event_Date.split("/")[2]; 
+            if (year.length == 2) {
+                if (parseInt(year) > 50) {
+                    year = "19"+year
+                } else {
+                    year = "20"+year
+                }
+            }
+            return year
+        })
+		.rollup(function (v) {
+			return d3.sum(v, function (d) {
+				return 1
+			}
+			);
+		})
+        .entries(data);
+
+        // Collect the keys to be used to create x axis
+        keys = []
+        incidentsByYear.forEach(element => {
+            keys.push(element.key)
+        })
+        keys.sort()
+
+        // Set height and width to be 90% of SVG. 
+        // Chart WILL get hidden if height and width above 700px
+        // Can be fixed by adjusting SVG size. 
+        height = STAGE_HEIGHT * 0.9
+        width = STAGE_WIDTH * 0.9
+        
+        // Technically, the max value of yScale should be retrieved from the dataset. 
+        // But I hard coded it here as this is only for demonstration purpose
+        var yScale = d3.scaleLinear()
+        .domain([0, 150])
+        .range([height, 0]);
+        var xScale = d3.scaleOrdinal()
+        .domain(keys)
+        .range(d3.range(0, width, width / keys.length));
+        
+        // chartOffset is used to move the chart from its creation point. (moves both x and y position by offset)
+        // purpose is to prevent axis from getting hidden due to being outside SVG bounding box.
+        var chartOffset = [50, 50]
+        // xRegionOffset move the xAxis in the +x direction by offset.
+        // set this to a value > 0 if you do not want origin of chart to be at the intersection of axis.
+        var xRegionOffset = 20
+
+        var chart = createChartWithAxis(xScale, yScale, width, height, chartOffset, xRegionOffset)  
+        // Create chart title
+        chart.append('text')
+        .attr('class', 'title')
+        .attr('x', width / 2 + chartOffset[0] + xRegionOffset)
+        .attr('y', 30)
+        .text('Number of Incidents per year');
+
+        // Create bars for the chart
+        chart.selectAll('rect')
+		.data(incidentsByYear)
+        .enter()
+        .append("rect")
+        .attr("x", function (d) { return xRegionOffset + chartOffset[0] + xScale(d.key) - 5 })
+        .attr("y", yScale(0) + chartOffset[1])
+        .attr("width", "10")
+        .style("fill", "green")
+        .transition()
+        .duration(800)
+        .delay(100)
+		.attr("height", function (d) {
+            return yScale(0) - yScale(d.value)
+		})
+        .attr("y", function (d) { return yScale(d.value) + chartOffset[1] })
+    })
+
 }
 
 /**
@@ -483,7 +732,9 @@ function initializeStepsPlotsArray() {
         exampleDrawChart,
         drawHeatMapTypeOfInjuries,
         drawHeatMapTypeOfInjuriesAxisInverted,
-        exampleDrawOnlyYaxis,
+        drawGraph3,
+        drawGraph3Breakdown,
+        drawGraph4,
         exampleDrawOnlyXaxis
     ]
     return plots

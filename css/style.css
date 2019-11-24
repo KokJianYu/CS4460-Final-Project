@@ -21,6 +21,11 @@ body {
     text-anchor: middle;
 }
 
+#vis .small_header {
+    font-size: 25px;
+    text-anchor: middle;
+}
+
 .step {
     margin-bottom: 400px;
 }
