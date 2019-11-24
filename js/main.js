@@ -42,20 +42,21 @@ function showTitle() {
  * @param {*} yScale the yScale to create the x axis with (d3.scaleLinear or d3.scaleOrdinal)
  * @param {*} width the width of the chart (recommended to be 600)
  * @param {*} height the height of the chart (recommended to be 600)
- * @param {*} chartOffset the offset of the chart from the svg 
+ * @param {*} chartOffset array consisting of the offset of the chart from the svg. index 0 is x offset, 1 is y offset. 
  * @param {*} xRegionOffset the offset of the x axis from the y axis. (if 0, origin will be at axis intersection)
+ * @param {*} chartClass the class you wish to assign to the chart.
  */
-function createChartWithAxis(xScale, yScale, width, height, chartOffset=50, xRegionOffset=0) {
+function createChartWithAxis(xScale, yScale, width, height, chartOffset=[50,50], xRegionOffset=0, chartClass="chart") {
     
     var chart = svg.append('g')
         .attr("width", width)
         .attr("height", height)
-        .attr("class", "chart")
+        .attr("class", chartClass)
     if (yScale != null){
-        chart.append('g').attr('transform', `translate(${chartOffset}, ${chartOffset})`).call(d3.axisLeft(yScale))
+        chart.append('g').attr('transform', `translate(${chartOffset[0]}, ${chartOffset[1]})`).call(d3.axisLeft(yScale))
     }
     if (xScale != null) {
-        chart.append('g').attr('transform', `translate(${xRegionOffset + chartOffset}, ${height + chartOffset})`).call(d3.axisBottom(xScale))
+        chart.append('g').attr('transform', `translate(${xRegionOffset + chartOffset[0]}, ${height + chartOffset[1]})`).call(d3.axisBottom(xScale))
     }
     return chart
 }
@@ -113,7 +114,7 @@ function exampleDrawChart() {
         
         // chartOffset is used to move the chart from its creation point. (moves both x and y position by offset)
         // purpose is to prevent axis from getting hidden due to being outside SVG bounding box.
-        var chartOffset = 50
+        var chartOffset = [50, 50]
         // xRegionOffset move the xAxis in the +x direction by offset.
         // set this to a value > 0 if you do not want origin of chart to be at the intersection of axis.
         var xRegionOffset = 20
@@ -122,8 +123,8 @@ function exampleDrawChart() {
         // Create chart title
         chart.append('text')
         .attr('class', 'title')
-        .attr('x', width / 2 + chartOffset + xRegionOffset)
-        .attr('y', height / 20)
+        .attr('x', width / 2 + chartOffset[0] + xRegionOffset)
+        .attr('y', 30)
         .text('Number of deaths per year');
 
         // Create bars for the chart
@@ -131,8 +132,8 @@ function exampleDrawChart() {
 		.data(deathsByYear)
         .enter()
         .append("rect")
-        .attr("x", function (d) { return xRegionOffset + chartOffset + xScale(d.key) - 5 })
-        .attr("y", yScale(0) + chartOffset)
+        .attr("x", function (d) { return xRegionOffset + chartOffset[0] + xScale(d.key) - 5 })
+        .attr("y", yScale(0) + chartOffset[1])
         .attr("width", "10")
         .style("fill", "green")
         .transition()
@@ -141,7 +142,7 @@ function exampleDrawChart() {
 		.attr("height", function (d) {
             return yScale(0) - yScale(d.value)
 		})
-        .attr("y", function (d) { return yScale(d.value) + chartOffset })
+        .attr("y", function (d) { return yScale(d.value) + chartOffset[1] })
     })
 
 }
@@ -167,7 +168,159 @@ function exampleDrawOnlyXaxis() {
     var chart = createChartWithAxis(xScale, null, width, height)
     // TODO: Add data
 }
+
 // ################################### END OF EXAMPLE FUNCTIONS ###################################
+
+function drawHeatMapTypeOfInjuries(){
+    d3.csv(AIRCRAFT_DATA_PATH, function(data){
+
+        // Aggregate Total_Fatal_Injuries from incidents with the same year.
+        var injuriesByYear = d3.nest()
+        .key(function (d) { 
+            year = d.Event_Date.split("/")[2]; 
+            if (year.length == 2) {
+                if (parseInt(year) > 50) {
+                    year = "19"+year
+                } else {
+                    year = "20"+year
+                }
+            }
+            return year
+        })
+        .rollup(function (v) {
+            total_fatal_injuries = d3.sum(v, function (d) { return d.Total_Fatal_Injuries });
+            total_serious_injuries = d3.sum(v, function (d) { return d.Total_Serious_Injuries });
+            total_uninjured = d3.sum(v, function (d) { return d.Total_Uninjured });
+            return_dict = {
+                "Total_Fatal_Injuries":total_fatal_injuries,
+                "Total_Serious_Injuries":total_serious_injuries,
+                "Total_Uninjured":total_uninjured,
+            }
+            return return_dict
+        })
+        .entries(data);
+
+        // Collect the keys to be used to create x axis
+        keys = []
+        injuriesByYear.forEach(element => {
+            keys.push(element.key)
+        })
+        keys.sort()
+
+        // Set height and width to be 90% of SVG. 
+        // Chart WILL get hidden if height and width above 700px
+        // Can be fixed by adjusting SVG size. 
+        height = STAGE_HEIGHT * 0.9 - 300
+        width = STAGE_WIDTH * 0.9 - 100
+        
+        // chartOffset is used to move the chart from its creation point. (moves both x and y position by offset)
+        // purpose is to prevent axis from getting hidden due to being outside SVG bounding box.
+        var chartOffset = [150, 100]
+        // xRegionOffset move the xAxis in the +x direction by offset.
+        // set this to a value > 0 if you do not want origin of chart to be at the intersection of axis.
+        var xRegionOffset = 0
+
+        // Technically, the max value of yScale should be retrieved from the dataset. 
+        // But I hard coded it here as this is only for demonstration purpose
+        var yScale = d3.scaleBand()
+        .domain(["Total_Fatal_Injuries", "Total_Serious_Injuries", "Total_Uninjured"])
+        .range([height, 0])
+        .padding(0.1);
+        var xScale = d3.scaleBand()
+        .domain(keys)
+        .range([0, width])
+        .padding(0.1);  
+
+        var myColor = d3.scaleLinear()
+        .range(["#a2fafa", "#0c00ad"])
+        .domain([1,8000])
+
+
+        var chart = createChartWithAxis(xScale, yScale, width, height, chartOffset, xRegionOffset)  
+        // Create chart title
+        chart.append('text')
+        .attr('class', 'title')
+        .attr('x', width / 2 + chartOffset[0] + xRegionOffset)
+        .attr('y', 30)
+        .text('Types of Injuries per year');
+
+        chart.selectAll()
+        .data(injuriesByYear)
+        .enter()
+        .append("rect")
+        .attr("x", function (d) { return xRegionOffset + chartOffset[0] + xScale(d.key)})
+        .attr("y", function(d) { return yScale("Total_Fatal_Injuries") + chartOffset[1] })
+        .attr("width", xScale.bandwidth() )
+        .attr("height", yScale.bandwidth() )
+        .style("fill", function(d) { return myColor(d.value["Total_Fatal_Injuries"])} );
+        chart.selectAll()
+        .data(injuriesByYear)
+        .enter()
+        .append("rect")
+        .attr("x", function (d) { return xRegionOffset + chartOffset[0] + xScale(d.key)})
+        .attr("y", function(d) { return yScale("Total_Serious_Injuries") + chartOffset[1] })
+        .attr("width", xScale.bandwidth() )
+        .attr("height", yScale.bandwidth() )
+        .style("fill", function(d) { return myColor(d.value["Total_Serious_Injuries"])} );
+        chart.selectAll()
+        .data(injuriesByYear)
+        .enter()
+        .append("rect")
+        .attr("x", function (d) { return xRegionOffset + chartOffset[0] + xScale(d.key)})
+        .attr("y", function(d) { return yScale("Total_Uninjured") + chartOffset[1]})
+        .attr("width", xScale.bandwidth() )
+        .attr("height", yScale.bandwidth() )
+        .style("fill", function(d) { return myColor(d.value["Total_Uninjured"])} )
+
+        var defs = svg.append("defs");
+        var linearGradient = defs.append("linearGradient")
+        .attr("id", "linear-gradient");
+        linearGradient
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "0%");
+        //Set the color for the start (0%)
+        linearGradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", "#a2fafa"); //light blue
+
+        //Set the color for the end (100%)
+        linearGradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "#0c00ad"); //dark blue
+
+        
+        var legendWrapper = svg.append("g")
+            .attr("id", "legend_wrapper")
+            .attr('transform', `translate(${width/2 + chartOffset[0]}, ${height + chartOffset[1] + 60})`)
+            // .attr("x", width/2 + chartOffset[0] - 150)
+            // .attr("y", height + chartOffset[1] + 60)
+        
+        legendWrapper.append("text")
+        .style("text-anchor", "middle")
+        .text("Number of Occurrence")
+
+        legendWrapper.append("rect")
+        .attr("width", 300)
+        .attr("height", 10)
+        .attr("x", -150)
+        .attr("y", 20)
+        .style("fill", "url(#linear-gradient)");
+        
+        //Define x-axis
+        var xAxis = d3.scaleLinear()
+        .domain([0, 8000])
+        .range([0, 300]);
+        
+        //Set up X axis
+        legendWrapper.append("g")
+        .attr("class", "heatmap")
+        .attr("transform", "translate("+ (-150) +"," + (30) + ")")
+        .call(d3.axisBottom(xAxis));
+    });
+        
+}
 
 /**
  * This function returns an array containing functions
@@ -177,6 +330,7 @@ function initializeStepsPlotsArray() {
     var plots = [
         showTitle, 
         exampleDrawChart,
+        drawHeatMapTypeOfInjuries,
         exampleDrawOnlyYaxis,
         exampleDrawOnlyXaxis
     ]

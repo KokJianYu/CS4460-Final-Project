@@ -64,3 +64,8 @@ body {
 #extra_space {
     height:400px;
 }
+
+.heatmap path, .heatmap tick, .heatmap line {
+    fill: none;
+    stroke: none;
+}
