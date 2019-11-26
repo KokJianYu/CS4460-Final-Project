@@ -729,13 +729,10 @@ function drawGraph4() {
 function initializeStepsPlotsArray() {
     var plots = [
         showTitle, 
-        exampleDrawChart,
         drawHeatMapTypeOfInjuries,
-        drawHeatMapTypeOfInjuriesAxisInverted,
         drawGraph3,
         drawGraph3Breakdown,
         drawGraph4,
-        exampleDrawOnlyXaxis
     ]
     return plots
 }
