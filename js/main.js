@@ -838,11 +838,9 @@ function initializeStepsPlotsArray() {
         showTitle, 
         drawGraph1,
         drawHeatMapTypeOfInjuries,
-        drawHeatMapTypeOfInjuriesAxisInverted,
         drawGraph3,
         drawGraph3Breakdown,
         drawGraph4,
-        exampleDrawOnlyXaxis
     ]
     return plots
 }
