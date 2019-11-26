@@ -553,7 +553,7 @@ function drawGraph3Breakdown() {
             return d.Injury_Severity.split("(")[0]
         })
 		.key(function (d) { 
-            k = d.Make + " " +d.Model
+            var k = d.Make + " " +d.Model
             return k
         })
 		.rollup(function (v) {
@@ -719,7 +719,114 @@ function drawGraph4() {
 		})
         .attr("y", function (d) { return yScale(d.value) + chartOffset[1] })
     })
+}
 
+function drawGraph1() {
+
+    d3.csv(AIRCRAFT_DATA_PATH, function(data){
+
+        // Aggregate Total_Fatal_Injuries from incidents with the same year.
+        var incidentsByYear = d3.nest()
+		.key(function (d) { 
+            year = d.Event_Date.split("/")[2]; 
+            if (year.length == 2) {
+                if (parseInt(year) > 50) {
+                    year = "19"+year
+                } else {
+                    year = "20"+year
+                }
+            }
+            return year >= 2011
+        })
+        .key(function (d) { 
+            return d.Injury_Severity.split("(")[0]
+        })
+		.rollup(function (v) {
+			return d3.sum(v, function (d) {
+				return 1
+			}
+			);
+		})
+        .entries(data);
+
+        // Collect the keys to be used to create x axis
+        keys = []
+        var data_2016 = []
+        incidentsByYear.forEach(element => {
+            if (element.key == "true") {
+                data_2016 = element
+            }
+        })
+        var data = []
+        data_2016.values.forEach(element => {
+            if (element.key != "Unavailable") {  
+                data.push({
+                    "key": element.key, 
+                    "value": element.value
+                })
+            } 
+        })
+
+        // Set height and width to be 90% of SVG. 
+        // Chart WILL get hidden if height and width above 700px
+        // Can be fixed by adjusting SVG size. 
+        var height = STAGE_HEIGHT * 0.9
+        var width = STAGE_WIDTH * 0.9
+        var radius = Math.min(width, height) / 2;
+
+        var color = d3.scaleOrdinal()
+            .range(["#98abc5", "#8a89a6", "#7b6888"]);
+
+        var arc = d3.arc()
+            .outerRadius(radius - 10)
+            .innerRadius(0);
+
+        var labelArc = d3.arc()
+            .outerRadius(radius - 150)
+            .innerRadius(radius - 150);
+
+        var pie = d3.pie()
+            .sort(null)
+            .value(function(d) { return d.value; });
+
+        
+        // chartOffset is used to move the chart from its creation point. (moves both x and y position by offset)
+        // purpose is to prevent axis from getting hidden due to being outside SVG bounding box.
+        var chartOffset = [50, 50]
+        // xRegionOffset move the xAxis in the +x direction by offset.
+        // set this to a value > 0 if you do not want origin of chart to be at the intersection of axis.
+        var xRegionOffset = 20
+
+        var chart = createChartWithAxis(null, null, width, height)  
+
+        chart.append('text')
+        .attr('class', 'title')
+        .attr('x', width / 2 + chartOffset[0] + xRegionOffset)
+        .attr('y', 30)
+        .text('Incidents for 2011 to 2016');
+
+        var g = chart.selectAll(".arc")
+            .data(pie(data))
+        .enter().append("g")
+            .attr("class", "arc")
+            .attr("transform", "translate("+ (width/2 + chartOffset[0]) +", "+(height/2 + chartOffset[0])+")" );
+
+        g.append("path")
+        .attr("d", arc)
+        .style("fill", function(d) { return color(d.data.value); });
+
+        g.append("text")
+        .attr("transform", function(d) { return "translate(" +labelArc.centroid(d)+ ")"; })
+        .attr("dy", ".35em")
+        .attr("dx", "-1em")
+        .text(function(d) { return d.data.key; });
+
+        g.append("text")
+        .attr("transform", function(d) { return "translate(" +labelArc.centroid(d)+ ")"; })
+        .attr("dy", "1.3em")
+        .attr("dx", "-0.4em")
+        .text(function(d) { return "("+d.data.value+")"; });
+    })
 }
 
 /**
@@ -729,6 +836,7 @@ function drawGraph4() {
 function initializeStepsPlotsArray() {
     var plots = [
         showTitle, 
+        drawGraph1,
         drawHeatMapTypeOfInjuries,
         drawGraph3,
         drawGraph3Breakdown,
