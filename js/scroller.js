@@ -31,7 +31,7 @@ function scroller() {
         sectionPositions = [];
         var startPos = 0;
         sections.each(function(d, i){
-            var currPos = this.getBoundingClientRect().top;
+            var currPos = this.getBoundingClientRect().bottom;
             if (i == 0) {
                 startPos = currPos;
             }

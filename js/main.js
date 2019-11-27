@@ -230,10 +230,11 @@ function drawHeatMapTypeOfInjuries(){
         .domain(keys)
         .range([0, width])
         .padding(0.1);  
+        console.log(injuriesByYear)
 
         var myColor = d3.scaleLinear()
-        .range(["#a2fafa", "#0c00ad"])
-        .domain([1,8000])
+        .range(["#FFFFDD", "#3E9583", "#1F2D86"])
+        .domain([1,4000, 8000])
 
 
         var chart = createChartWithAxis(xScale, yScale, width, height, chartOffset, xRegionOffset)  
@@ -295,12 +296,15 @@ function drawHeatMapTypeOfInjuries(){
         //Set the color for the start (0%)
         linearGradient.append("stop")
         .attr("offset", "0%")
-        .attr("stop-color", "#a2fafa"); //light blue
+        .attr("stop-color", "#FFFFDD"); //light blue
 
+        linearGradient.append("stop")
+        .attr("offset", "50%")
+        .attr("stop-color", "#3E9583"); //light blue
         //Set the color for the end (100%)
         linearGradient.append("stop")
         .attr("offset", "100%")
-        .attr("stop-color", "#0c00ad"); //dark blue
+        .attr("stop-color", "#1F2D86"); //dark blue
 
         
         var legendWrapper = svg.append("g")
@@ -587,7 +591,14 @@ function drawGraph3Breakdown() {
             .attr('class', 'title')
             .attr('x', width / 2 + 150 + 0)
             .attr('y', 30)
-            .text('Number of Incidents');
+            .text('Number of incidents');
+        
+        svg.append('text')
+            .attr('class', 'title')
+            .attr('x', width / 2 + 150 + 0)
+            .attr('y', 30+40)
+            .text('by Airplanes Make and Model');
+            
 
         headers = ["Fatal", "Non-Fatal", "Incidents"]
 
@@ -619,7 +630,7 @@ function drawGraph3Breakdown() {
             .range(d3.range(0, height, height / keys.length));
             // chartOffset is used to move the chart from its creation point. (moves both x and y position by offset)
             // purpose is to prevent axis from getting hidden due to being outside SVG bounding box.
-            var chartOffset = [150, 100 + (height+75)*i]
+            var chartOffset = [150, 110 + (height+75)*i]
             // xRegionOffset move the xAxis in the +x direction by offset.
             // set this to a value > 0 if you do not want origin of chart to be at the intersection of axis.
             var xRegionOffset = 10
@@ -763,14 +774,14 @@ function drawGraph1() {
 
         // Collect the keys to be used to create x axis
         keys = []
-        var data_2016 = []
+        var data_all = []
         incidentsByYear.forEach(element => {
             if (element.key == "true") {
-                data_2016 = element
+                data_all = element
             }
         })
         var data = []
-        data_2016.values.forEach(element => {
+        data_all.values.forEach(element => {
             if (element.key != "Unavailable") {  
                 data.push({
                     "key": element.key, 
@@ -804,7 +815,7 @@ function drawGraph1() {
         
         // chartOffset is used to move the chart from its creation point. (moves both x and y position by offset)
         // purpose is to prevent axis from getting hidden due to being outside SVG bounding box.
-        var chartOffset = [50, 50]
+        var chartOffset = [50, 70]
         // xRegionOffset move the xAxis in the +x direction by offset.
         // set this to a value > 0 if you do not want origin of chart to be at the intersection of axis.
         var xRegionOffset = 20
@@ -815,13 +826,20 @@ function drawGraph1() {
         .attr('class', 'title')
         .attr('x', width / 2 + chartOffset[0] + xRegionOffset)
         .attr('y', 30)
-        .text('Incidents for 2011 to 2016');
+        .text('Incident classification');
+
+        chart.append('text')
+        .attr('class', 'title')
+        .attr('x', width / 2 + chartOffset[0] + xRegionOffset)
+        .attr('y', 30+30)
+        .text('from 2011 to 2016');
+        
 
         var g = chart.selectAll(".arc")
             .data(pie(data))
         .enter().append("g")
             .attr("class", "arc")
-            .attr("transform", "translate("+ (width/2 + chartOffset[0]) +", "+(height/2 + chartOffset[0])+")" );
+            .attr("transform", "translate("+ (width/2 + chartOffset[0]) +", "+(height/2 + chartOffset[1])+")" );
 
         g.append("path")
         .attr("d", arc)
@@ -850,7 +868,6 @@ function initializeStepsPlotsArray() {
         showTitle, 
         drawGraph1,
         drawHeatMapTypeOfInjuries,
-        drawGraph3,
         drawGraph3Breakdown,
         drawGraph4,
     ]
