@@ -3,7 +3,7 @@
 This repo is a project for Module CS4460 (Information Visualization) in Georgia Institute of Technology.
 
 ## Project Description
-" This final programming assignment of the term is a more open-ended data visualization challenge. We have identified five potential datasets for you to visualize (P5 datasets on Canvas). You should select one, then design and implement an interactive visualization of the data. This assignment will be done in pairs of students. Ideally, you and your teammate will take the knowledge and background that you are learning this semester about Information Visualization and put it to good use in a new, creative effort. "
+This final programming assignment of the term is a more open-ended data visualization challenge. We have identified five potential datasets for you to visualize (P5 datasets on Canvas). You should select one, then design and implement an interactive visualization of the data. This assignment will be done in pairs of students. Ideally, you and your teammate will take the knowledge and background that you are learning this semester about Information Visualization and put it to good use in a new, creative effort.
 
 ## Dataset 
 
